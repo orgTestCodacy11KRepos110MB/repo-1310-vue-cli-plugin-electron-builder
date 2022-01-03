@@ -21,7 +21,6 @@ jest.mock('yargs', () => ({ command: mockYargsCommand }))
 jest.mock('@vue/cli-service/lib/commands/build')
 jest.mock('fs-extra')
 jest.mock('@vue/cli-service/lib/commands/build/formatStats')
-jest.mock('../lib/removeJunk.js', () => jest.fn(() => 'removeJunk'))
 jest.mock('electron-builder')
 const mockInstallAppDeps = jest.fn()
 jest.mock('electron-builder/out/cli/install-app-deps.js', () => ({
@@ -759,30 +758,6 @@ describe('electron:serve', () => {
 
     // Proper file is watched
     expect(chokidar.watch.mock.calls[0][0]).toContain('projectPath/preloadFile')
-  })
-
-  test('Junk output is stripped from electron child process', async () => {
-    await runCommand('electron:serve')
-
-    // Junk is removed
-    expect(mockExeca.stderr.pipe).toBeCalledWith('removeJunk')
-    expect(mockExeca.stdout.pipe).toBeCalledWith('removeJunk')
-    // Output is piped to console
-    expect(mockPipe).toBeCalledWith(process.stderr)
-    expect(mockPipe).toBeCalledWith(process.stdout)
-  })
-
-  test('Junk output is not stripped from electron child process if removeElectronJunk is set to false', async () => {
-    await runCommand('electron:serve', {
-      pluginOptions: { electronBuilder: { removeElectronJunk: false } }
-    })
-
-    // Junk is not removed
-    expect(mockPipe).not.toBeCalled()
-    expect(mockPipe).not.toBeCalled()
-    // Output is still piped to console
-    expect(mockExeca.stderr.pipe).toBeCalledWith(process.stderr)
-    expect(mockExeca.stdout.pipe).toBeCalledWith(process.stdout)
   })
 
   test('package.json is copied', async () => {

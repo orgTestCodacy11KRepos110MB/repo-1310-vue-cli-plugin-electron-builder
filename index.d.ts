@@ -36,7 +36,7 @@ interface Server {
 */
 export function testWithSpectron(spectron: any, options?: Partial<Options>): Promise<Server>
 
-  
+
 export type PluginOptions = {
   builderOptions?: ElectronBuilderOptions,
   chainWebpackMainProcess?: (config?: ChainableWebpackConfig) => void,
@@ -49,7 +49,6 @@ export type PluginOptions = {
   disableMainProcessTypescript?: boolean,
   mainProcessTypeChecking?: boolean,
   customFileProtocol?: string,
-  removeElectronJunk?: boolean,
   externals?: string[],
   nodeModulesPath?: string[],
   preload?: string | Record<string, string>
