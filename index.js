@@ -648,3 +648,4 @@ module.exports.defaultModes = {
   'electron:serve': 'development'
 }
 module.exports.testWithSpectron = require('./lib/testWithSpectron')
+module.exports.testWithPlaywright = require('./lib/testWithPlaywright')
