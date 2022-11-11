@@ -7290,6 +7290,13 @@ electron-osx-sign@^0.6.0:
     minimist "^1.2.0"
     plist "^3.0.1"
 
+electron-playwright-helpers@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/electron-playwright-helpers/-/electron-playwright-helpers-1.2.0.tgz#a9d175bc767bb2868aeaa1440483e69e5c60858c"
+  integrity sha512-4xBbfsrmv+OWo9aWY+jGD6xGIbgcoaGvzsBHyWCotA3sRs0MhU8E/QdrC120kyiuEu2IY/lYSb/Uf5NefFfiwg==
+  dependencies:
+    asar "^3.1.0"
+
 electron-publish@23.6.0:
   version "23.6.0"
   resolved "https://registry.yarnpkg.com/electron-publish/-/electron-publish-23.6.0.tgz#ac9b469e0b07752eb89357dd660e5fb10b3d1ce9"

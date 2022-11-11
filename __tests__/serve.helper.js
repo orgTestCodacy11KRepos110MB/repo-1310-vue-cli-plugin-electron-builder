@@ -1,11 +1,8 @@
 const create = require('./createProject.helper.js')
 const path = require('path')
-const Application = require('spectron').Application
-const electronPath = require('electron')
-const portfinder = require('portfinder')
+const { _electron: electron } = require('playwright-core')
 const checkLogs = require('./checkLogs.helper.js')
 
-portfinder.basePort = 9515
 const serve = (project, notifyUpdate) =>
   new Promise((resolve, reject) => {
     // --debug to prevent Electron from being launched
@@ -45,46 +42,71 @@ const runTests = async (useTS) => {
     path.join(process.cwd(), '__tests__/projects/' + projectName, p)
   // Wait for dev server to start
   const { stopServe } = await serve(project)
-  expect(project.has('dist_electron/index.js')).toBe(true)
+  expect(project.has(path.join('dist_electron', 'index.js'))).toBe(true)
   // Launch app with spectron
-  const app = new Application({
-    path: electronPath,
-    args: [projectPath('dist_electron')],
+  const app = await electron.launch({
+    args: [projectPath(path.join('dist_electron', 'index.js'))],
     env: {
       IS_TEST: true
     },
     cwd: projectPath(''),
     // Make sure tests do not interfere with each other
-    port: await portfinder.getPortPromise(),
     // Increase wait timeout for parallel testing
-    waitTimeout: 10000
+    timeout: 10000
   })
 
-  await app.start()
-  const win = app.browserWindow
-  const client = app.client
-  await client.waitUntilWindowLoaded()
-
   // Check that proper info was logged
-  await checkLogs({ client, projectName, projectPath, mode: 'serve', useTS })
+  // await checkLogs({ client, projectName, projectPath, mode: 'build' })
 
-  // Window was created
-  expect(await client.getWindowCount()).toBe(1)
+  const win = await app.firstWindow()
+  const browserWindow = await app.browserWindow(win)
+  const {
+    isDevToolsOpened,
+    isLoading,
+    isMinimized,
+    isVisible,
+    height,
+    width
+  } = await browserWindow.evaluate((browserWindow) => {
+    return {
+      isDevToolsOpened: browserWindow.webContents.isDevToolsOpened(),
+      isLoading: browserWindow.webContents.isLoading(),
+      isMinimized: browserWindow.isMinimized(),
+      isVisible: browserWindow.isVisible(),
+      ...browserWindow.getBounds()
+    }
+  })
+
   // It is not minimized
-  expect(await win.isMinimized()).toBe(false)
+  expect(isMinimized).toBe(false)
   // Window is visible
-  expect(await win.isVisible()).toBe(true)
+  expect(isVisible).toBe(true)
   // Size is correct
-  const { width, height } = await win.getBounds()
   expect(width).toBeGreaterThan(0)
   expect(height).toBeGreaterThan(0)
+
+  // Window was created
+  expect(app.windows().length).toBe(1)
+  // It is not minimized
+  expect(isMinimized).toBe(false)
+  // Dev tools is not open
+  expect(isDevToolsOpened).toBe(false)
+  // Window is visible
+  expect(isVisible).toBe(true)
+  // Size is correct
+  expect(width).toBeGreaterThan(0)
+  expect(height).toBeGreaterThan(0)
+  // Load was successful
+  expect(isLoading).toBe(false)
   // App is loaded properly
-  expect(await (await app.client.$('#app')).getHTML()).toContain(
-    `Welcome to Your Vue.js ${useTS ? '+ TypeScript ' : ''}App`
-  )
+  expect(
+    /Welcome to Your Vue\.js (\+ TypeScript )?App/.test(
+      await (await win.$('#app')).innerHTML()
+    )
+  ).toBe(true)
 
   stopServe()
-  await app.stop()
+  await app.close()
 }
 
 module.exports.runTests = runTests
